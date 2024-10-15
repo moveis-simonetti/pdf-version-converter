@@ -1,26 +1,20 @@
 <?php
 
-/*
- * This file is part of the PDF Version Converter.
- *
- * (c) Thiago Rodrigues <xthiago@gmail.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 namespace Xthiago\PDFVersionConverter\Converter;
 
-use \PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Xthiago\PDFVersionConverter\Guesser\RegexGuesser;
 
 /**
  * @author Thiago Rodrigues <xthiago@gmail.com>
  */
-class GhostscriptConverterCommandTest extends PHPUnit_Framework_TestCase
+class GhostscriptConverterCommandTest extends TestCase
 {
     protected $tmp;
+    protected $testsDirectory;
 
-    protected $files = array(
+    protected $files = [
         'text',
         'image.png',
         'v1.0.pdf',
@@ -32,42 +26,53 @@ class GhostscriptConverterCommandTest extends PHPUnit_Framework_TestCase
         'v1.6.pdf',
         'v1.7.pdf',
         'v2.0.pdf',
-    );
+    ];
 
-    protected function setUp()
+    /**
+     * @return string|string[]
+     */
+    public static function getTestsDirectory()
     {
-        $this->tmp = __DIR__.'/../files/stage/';
+        return str_replace('/Converter', '', __DIR__);
+    }
 
-        if (!file_exists($this->tmp))
+    protected function setUp(): void
+    {
+        $this->testsDirectory = self::getTestsDirectory();
+        $this->tmp = $this->testsDirectory . '/files/stage';
+
+        if (!file_exists($this->tmp)) {
             mkdir($this->tmp);
+        }
 
         $this->copyFilesToStageArea();
     }
 
+    /**
+     * @throws RuntimeException
+     */
     protected function copyFilesToStageArea()
     {
-        foreach($this->files as $file) {
-            if (!copy(__DIR__.'/../files/repo/'. $file, $this->tmp . $file))
-                throw new \RuntimeException("Can't create test file.");
+        foreach ($this->files as $file) {
+            if (!copy($this->testsDirectory . '/files/repo/' . $file, $this->tmp . '/' . $file)) {
+                throw new RuntimeException("Can't create test file.");
+            }
         }
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        foreach($this->files as $file) {
-            unlink($this->tmp . $file);
+        foreach ($this->files as $file) {
+            unlink($this->tmp . '/' . $file);
         }
     }
 
     /**
-     * @param string $file
-     * @param $newVersion
-     *
      * @dataProvider filesProvider
      */
-    public function testMustConvertPDFVersionWithSuccess($file, $newVersion)
+    public function testMustConvertPDFVersionWithSuccess($file, $newVersion): void
     {
-        $tmpFile = $this->tmp .'/'. uniqid('pdf_version_changer_test_') . '.pdf';
+        $tmpFile = $this->tmp . '/' . uniqid('pdf_version_changer_test_') . '.pdf';
 
         $command = new GhostscriptConverterCommand();
         $command->run(
@@ -83,15 +88,12 @@ class GhostscriptConverterCommandTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param string $invalidFile
-     * @param $newVersion
-     *
      * @dataProvider invalidFilesProvider
-     * @expectedException RuntimeException
      */
-    public function testMustThrowException($invalidFile, $newVersion)
+    public function testMustThrowException($invalidFile, $newVersion): void
     {
-        $tmpFile = $this->tmp .'/'. uniqid('pdf_version_changer_test_') . '.pdf';
+        $this->expectException(RuntimeException::class);
+        $tmpFile = $this->tmp . '/' . uniqid('pdf_version_changer_test_') . '.pdf';
 
         $command = new GhostscriptConverterCommand();
         $command->run(
@@ -106,34 +108,28 @@ class GhostscriptConverterCommandTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($version, $newVersion);
     }
 
-    /**
-     * @return array
-     */
-    public static function filesProvider()
+    public static function filesProvider(): array
     {
-        return array(
+        return [
             // file, new version
-            array(__DIR__ . '/../files/stage/v1.1.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.2.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.3.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.4.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.5.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.6.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v1.7.pdf', '1.4'),
-            array(__DIR__ . '/../files/stage/v2.0.pdf', '1.4'),
-        );
+            [self::getTestsDirectory() . '/files/stage/v1.1.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.2.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.3.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.4.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.5.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.6.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v1.7.pdf', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/v2.0.pdf', '1.4'],
+        ];
     }
 
-    /**
-     * @return array
-     */
-    public static function invalidFilesProvider()
+    public static function invalidFilesProvider(): array
     {
-        return array(
+        return [
             // file, new version
-            array(__DIR__.'/../files/stage/text', '1.4'),
-            array(__DIR__.'/../files/stage/image.png', '1.5'),
-            array(__DIR__.'/../files/stage/dont-exists.pdf', '1.5'),
-        );
+            [self::getTestsDirectory() . '/files/stage/text', '1.4'],
+            [self::getTestsDirectory() . '/files/stage/image.png', '1.5'],
+            [self::getTestsDirectory() . '/files/stage/dont-exists.pdf', '1.5'],
+        ];
     }
 }

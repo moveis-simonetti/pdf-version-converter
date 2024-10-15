@@ -10,12 +10,13 @@
  */
 namespace Xthiago\PDFVersionConverter\Guesser;
 
-use \PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * @author Thiago Rodrigues <xthiago@gmail.com>
  */
-class RegexGuesserTest extends PHPUnit_Framework_TestCase
+class RegexGuesserTest extends TestCase
 {
     protected static $files = array(
         'text',
@@ -35,7 +36,7 @@ class RegexGuesserTest extends PHPUnit_Framework_TestCase
 
     protected $stageDir;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->tmpDir = __DIR__.'/../files/repo/';
         $this->stageDir = __DIR__.'/../files/stage/';
@@ -49,7 +50,7 @@ class RegexGuesserTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         foreach(self::$files as $file) {
             unlink($this->stageDir . $file);
@@ -74,10 +75,10 @@ class RegexGuesserTest extends PHPUnit_Framework_TestCase
      * @param string $file
      *
      * @dataProvider invalidFilesProvider
-     * @expectedException RuntimeException
      */
     public function testMustThrowException($file)
     {
+        $this->expectException(RuntimeException::class);
         $guesser = new RegexGuesser();
         $version = $guesser->guess($file);
     }
