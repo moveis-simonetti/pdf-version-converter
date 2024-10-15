@@ -11,32 +11,11 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class GhostscriptConverter implements ConverterInterface
 {
-    /**
-     * @var Filesystem
-     */
-    protected $fs;
-
-    /**
-     * @var GhostscriptConverterCommand
-     */
-    protected $command;
-
-    /**
-     * Directory where temporary files are stored.
-     *
-     * @var string
-     */
-    protected $tmp;
-
-    /**
-     * @param GhostscriptConverterCommand $command
-     * @param Filesystem $fs
-     * @param null|string $tmp
-     */
-    public function __construct(GhostscriptConverterCommand $command, Filesystem $fs, $tmp = null)
-    {
-        $this->command = $command;
-        $this->fs = $fs;
+    public function __construct(
+        protected GhostscriptConverterCommand $command,
+        protected Filesystem $fs,
+        protected ?string $tmp = null
+    ) {
         $this->tmp = $tmp ?: sys_get_temp_dir();
     }
 
@@ -45,7 +24,7 @@ class GhostscriptConverter implements ConverterInterface
      *
      * @return string absolute path
      */
-    protected function generateAbsolutePathOfTmpFile()
+    protected function generateAbsolutePathOfTmpFile(): string
     {
         return $this->tmp . '/' . uniqid('pdf_version_changer_') . '.pdf';
     }
@@ -64,5 +43,6 @@ class GhostscriptConverter implements ConverterInterface
         }
 
         $this->fs->copy($tmpFile, $file, true);
+        $this->fs->remove($tmpFile);
     }
 }
